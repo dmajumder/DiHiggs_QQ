@@ -21,7 +21,7 @@ GCC = g++
 # main programs and required modules 
 
 
-MAIN =  main
+MAIN =  MyAna  
 MODULES = Functions #
 
 # search path for modules
@@ -34,12 +34,13 @@ MDIR = ./
 #LHAPDFLIBS = -L$(LHAPDFDIR) -lLHAPDF
 
 # fastjet
-FJINCS = $(shell  /Users/dm/cernbox/Work/DiHiggs_LesHouches2015/Vuoto/fastjet/bin/fastjet-config --cxxflags)
-FJCLIBS = $(shell /Users/dm/cernbox/Work/DiHiggs_LesHouches2015/Vuoto/fastjet/bin/fastjet-config --libs)
+FJINCS = $(shell /Users/Xanda/Documents/programs/fastjet-install-312/bin/fastjet-config --cxxflags)
+FJCLIBS = $(shell /Users/Xanda/Documents/programs/fastjet-install-312/bin/fastjet-config --libs --plugins )
+# FJCPLUG = $(shell /Users/Xanda/Documents/programs/fastjet-install/bin/fastjet-config --plugins)
 
 # root
-ROOTINCS = $(shell /usr/local/root/root-6.04.02/bin/root-config --cflags)
-ROOTLIBS = $(shell /usr/local/root/root-6.04.02/bin/root-config --glibs) 
+ROOTINCS = $(shell /Users/Xanda/Documents/programs/root/bin/root-config --cflags)
+ROOTLIBS = $(shell /Users/Xanda/Documents/programs/root/bin/root-config --glibs) 
 
 # scheduling and optimization options (such as -DSSE -DSSE2 -DP4) 
 CFLAGS = -ansi -O3 -Wall  
@@ -48,7 +49,7 @@ CFLAGS = -ansi -O3 -Wall
 INCPATH = -I../include $(FJINCS)  $(ROOTINCS)
 
 # additional libraries to be included 
-LIBS =  $(FJCLIBS)    $(ROOTLIBS)
+LIBS =  $(FJCLIBS)   $(ROOTLIBS)
 
 ############################## do not change ###################################
 

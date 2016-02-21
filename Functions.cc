@@ -7,7 +7,7 @@
 #include <TFile.h>
 #include <TArray.h>
 #include <TH1D.h>
-#include <TH1D.h>
+#include <TH2D.h>
 #include <TLegend.h>
 #include <TArray.h>
 #include <TVector.h>
@@ -17,7 +17,11 @@
 #include <TString.h>
 #include <TObject.h>
 #include <TMath.h>
+#include <TStyle.h>
+#include "TLorentzVector.h"
 #include <TVector2.h>
+#include <TLatex.h>
+#include <TLegend.h>
 #include <stdio.h>      /* Standard Library of Input and Output */
 #include <complex.h>    /* Standard c++ Library of Complex Numbers */
 #include "rootHistos.h" //declare the histos
@@ -26,102 +30,305 @@ using namespace fastjet;
 using namespace std;
 /////////////////////////////////////////////////////////////////
 void hello(){cout<<"\n\n\n HELLO!!!! \n\n"<<endl;}
-
-bool GenLevel4b(vector<PseudoJet> jets, vector<int> btag, vector<int> fattag) {
-
-  bool passGenCut(false) ; 
-
-  //std::vector<fastjet::PseudoJet>const_iterator ijet ;
-
-  int nhjets(0) ; 
-  std::vector<fastjet::PseudoJet> hjets ; 
-
-  for (int ijet = 0; ijet < jets.size(); ++ijet) {
-    if (jets.at(ijet).pt() < 300 || abs(jets.at(ijet).eta()) > 2.4) continue ;
-    if (btag.at(ijet) < 2) continue ; 
-    //if (fattag.at(ijet) < 1) continue ;
-    std::cout << " jet pt " << jets.at(ijet).pt() << " eta " << jets.at(ijet).eta() << " btag = " << btag.at(ijet) << std::endl ; 
-    hjets.push_back(jets.at(ijet)) ; 
-    ++nhjets ;  
-  }
-
-  std::cout << " nhjets = " << nhjets << std::endl ; 
-
-  if (hjets.size() < 2) return passGenCut ; 
-
-  double deta = abs(hjets.at(0).eta() - hjets.at(1).eta()) ; 
-   
-  if (deta < 1.2) return passGenCut ; 
-
-  passGenCut = true ; 
-
-  return passGenCut ; 
-  
-}
-
 /////////////////////////////////////////////////////////////////
-bool GenLevelDilep(vector<PseudoJet> jets,  vector<PseudoJet> taus){
-    vector<PseudoJet> alltaus; 
-    ///////////////////////////////////////////////////////////////////
-    // gen level info // had == plus
-    bool passGencut = false;
-    //int blll=-1, bhhh=-1, ell=-1, ehh=-1, null=-1, nuhh=-1;
-    //for(unsigned int nj1=0; nj1< particles.size(); nj1++) if(particles.at(nj1).user_index()==5) bhhh=nj1; else if(particles.at(nj1).user_index()==-5) blll=nj1; 
-    //for(unsigned int nj1=0; nj1< leptons.size(); nj1++) {if(leptons.at(nj1).user_index() > 0) ell=nj1; else if(leptons.at(nj1).user_index() < 0) ehh=nj1;}
-    //for(unsigned int nj1=0; nj1< neutrinos.size(); nj1++) {if(neutrinos.at(nj1).user_index() > 0) nuhh=nj1; else  null=nj1;}
-    //PseudoJet lepTtrue, hadTtrue; int counttruth =-1;
-    //if(blll!=-1 && bhhh!=-1 && ell!=-1 && ehh!=-1 && null!=-1 && nuhh!=-1){ 
-    //cout<<"here "<<taus.size() <<endl;
-    ////////////////////////////////////////////////////////////////////////////
-    if(taus.size()>3) 
-        if(taus.at(0).pt()>20 && taus.at(1).pt()>20 && taus.at(2).pt()>20 && taus.at(3).pt()>20) {  
-            //alltaus = taus.at(0)+taus.at(1)+taus.at(2)+taus.at(3);
-            double ptj1=-1, ptj2=-1 , etaj1=20 , etaj2=20;
-            if (jets.size() > 0) {ptj1 = jets.at(0).pt(); etaj1 = jets.at(0).eta(); }
-            if (jets.size() > 1) {ptj2 = jets.at(1).pt(); etaj2 = jets.at(1).eta(); }
-            double hadtop[10]={(taus.at(0)+taus.at(1)+taus.at(2)+taus.at(3)).m(),
-                ptj1,etaj1,ptj2,etaj2,0,0,0,0,0};
-            for(unsigned i=0;i<10;i++) basicHadtop[i]->Fill(hadtop[i],1); 
-            //genbhad->Fill(particles.at(bhhh).pt(),weight);
-            //genblep->Fill(particles.at(blll).pt(),weight);
-            //genbhadeta->Fill(particles.at(bhhh).eta(),weight);
-            //genblepeta->Fill(particles.at(blll).eta(),weight);
-            //cout<<"here"<<endl;
-            passGencut = true;
-        } else {
-            double hadtop[10]={-10,-10,-10,-10,-10,0,0,0,0,0};
+double GenLevelWeight( vector<PseudoJet>  higgses ,    int cluster , int outlayer ){ 
+    double weight;
+    //cout<<"cluster "<<cluster<<" outlayer "<<outlayer<<endl;
+    //cout<<" here "<<histoJHEP_bin1.size()<<" "<<histoJHEP_bin1[cluster].size()<<endl;
+    if(higgses.size()>1){
+        // only the first tow are the gen level ones
+        PseudoJet higgs0 = higgses.at(0); 
+        PseudoJet higgs1 = higgses.at(1);
+        //if(higgs1.px() == -higgs0.px()) {
+            // compute costheta star         
+            TLorentzVector P1boost; P1boost.SetPxPyPzE(higgs1.px(),higgs1.py(),higgs1.pz(),higgs1.e());//  higgs1;
+            TLorentzVector P12; P12.SetPxPyPzE((higgs1 +higgs0).px(),(higgs1 +higgs0).py(),(higgs1 +higgs0).pz(),(higgs1 +higgs0).e());//  higgs1;
+            P1boost.Boost(-P12.BoostVector());                     
+            Double_t costhetast = P1boost.CosTheta();
+            //cout<<"here 2 "<<costhetast<<endl;
+            Double_t mhh = (higgs0+higgs1).m();
+            Double_t pth0 = (higgs0).pt(); 
+            Double_t pth1 = (higgs1).pt();// sort by pt
+            Double_t pth, pthsub;
+            if (pth1>pth0) {pth = pth1; pthsub=pth0;} else {pth = pth0; pthsub=pth1;}
+        
+            weight = 1;
+            //cout<<"here "<<weight<< " "<<mhh  <<endl;
+            //genmbb1->Fill(mhh,weight);
+            genmbb[cluster]->Fill(mhh,weight); 
+            genpth[cluster]->Fill(pth,weight);
+            genpthsub[cluster]->Fill(pthsub,weight);
+        gencost[cluster]->Fill(abs(higgs0.eta()));//abs(costhetast),weight);
+            //gendeta[cluster]->Fill(abs(higgs0.eta()-higgs1.eta()));
+            gendeta[cluster]->Fill(higgs0.delta_R(higgs1));
+            //cout<<"here "<<endl;
+            //bin1[cluster]->Fill(mhh,costhetast);
+            //bin1re[cluster]->Fill(mhh,costhetast,weight);  
+            //cout<<"here "<<endl;
+            /*
+            Int_t binmhhV1 = histoV1_bin1->FindBin(mhh,costhetast); 
+            double binV1 = histoV1_bin1->GetBinContent(binmhhV1);
             
-        }// close if cut
-    //} // close if have enough particles
-    /////////////////////////////////////////////////////////////////////////
-    return passGencut;
+            TH2D *dumb = (TH2D*) histoJHEP_bin1.at(cluster)->Clone();
+            Int_t binmhhJHEP = dumb->FindBin(mhh,costhetast); 
+            double binJHEP = dumb->GetBinContent(binmhhJHEP);// binmhhJHEP;//
+            
+            //cout<<"here in out "<<cluster<<" bin jhep "<< binmhhJHEP<<endl;
+            if (binV1 < 1 || binV1 == NULL) binV1 =0.001;
+            weight = ((double)binJHEP)/((double)binV1);//
+            if(binJHEP < 1 ) weight = 0;
+            //cout<<"here"<<endl;
+            //cout<<mhh<<" "<<costhetast<<" V1 "<< binV1 <<" JHEP "<< binJHEP <<" ratio "<<weight<<endl;
+            //bool GenLevel =  GenLevelDilep(mhh,costhetast,pth,weight); //cout<<"GenLevel "<<GenLevel<<endl;
+            genmbb.at(cluster)->Fill(mhh,weight); 
+            genpth.at(cluster)->Fill(pth,weight); 
+            gencost.at(cluster)->Fill(abs(costhetast),weight);
+            // to sum all 2D to make rweight
+//            bin1->Fill(pth,costhetast);
+//            bin1re->Fill(pth,costhetast,weight);
+            bin1.at(cluster)->Fill(mhh,costhetast);
+            bin1re.at(cluster)->Fill(mhh,costhetast,weight);    
+             */
+        //} else {cout<<"it is not gen level information"<<endl; return -1; }
+    } else {cout<<"no two higsses gen level information, stoped in event: "<<endl; return -1; }
+    //cout<<weight<<endl;
+    return weight;
 } // close gen level cuts
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
-int recol( vector<PseudoJet> jets,vector<PseudoJet> leptons,vector<PseudoJet> neutrinos, double weight){
-    // from the jet collection find the hadronic W
-    // construct met from all the rest
-    // do a isolation vector
-    vector<double> LepIso; int nlep=0; int nlepsurvive=0; //cout<<"njet "<<jets.size()<<endl;
-    unsigned int jsize = jets.size();
-    for(unsigned int j = 0;j<leptons.size();j++) {
-        for(unsigned int i = 0;i<jsize;i++) LepIso.push_back(leptons.at(j).delta_R(jets.at(i)));
-        if(leptons.size()>1 && jsize >0) for(unsigned int i = 0;i<leptons.size();i++) if (i!=j) LepIso.push_back(leptons.at(j).delta_R(leptons.at(i)));
-        double MinDRLep = TMath::LocMin(LepIso.size(), &LepIso[0]);
-        if(1>0 && leptons.size()>1 && jsize >0
-      //     && LepIso[MinDRLep] > lepiso  
-      //     && leptons.at(j).pt()> ptlepton 
-      //     && abs(leptons.at(j).eta())< etal
-           ) nlep++; // close basic cuts
-    } // close for nlep
-    //cout<<nlep<<endl;
-    Nlep_passing_kLooseID->Fill(nlep,1);
-    return nlep;
-}// close recow
+/////////////////////////////////////////////////////////////////////////
+void draw() {
+    //vector<TH2D> JHEP2D;
+    TLegend *leg = new TLegend(0.6,0.5,0.95,0.92);
+    leg->SetTextSize(0.04146853);
+    leg->SetLineColor(1);
+    leg->SetLineStyle(1);
+    leg->SetLineWidth(1);
+    leg->SetFillColor(0);
+    int color[8] = {
+        221,224,
+        225,228,
+        205,208,
+        209,212};
+    // draw all together
+    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(38); 
+    TCanvas* PT_HAT = new TCanvas();
+    PT_HAT->cd();
+    PT_HAT->Clear();
+    for(unsigned int cluster=0; cluster<8; cluster++) { 
+        cout<<cluster<<endl;
+        stringstream clus;
+        clus << cluster;
+        leg->SetHeader("m_{T'} (GeV)");
+        double normalize0 = 1./(genmbb[cluster]->Integral());
+        //double normalize1 = 1./(histoJHEP_mhh[cluster][0]->Integral());
+        cout<<"sumV1: "<< 1/normalize0<<" JHEP: "<<1/normalize0<<endl;
+        /////////////////////////////////////////////////////////
+        PT_HAT->Clear();
+        genmbb[cluster]->SetTitle("");
+        genmbb[cluster]->GetYaxis()->SetTitle("% of events / (20 GeV)");
+        genmbb[cluster]->SetLineColor(color[cluster]);//cluster+1); //color[cluster]
+        genmbb[cluster]->SetLineWidth(3);
+        //histoJHEP_mhh[cluster][0]->SetLineColor(8);
+        //histoJHEP_mhh[cluster][0]->SetLineWidth(3);
+        //histoJHEP_mhh[cluster][0]->Scale(normalize1);
+        genmbb[cluster]->Scale(normalize0);
+        //genmbb[cluster][0]->SetMaximum(1.2*genmbb[cluster][0]->GetMaximum());
+        leg->AddEntry(genmbb[cluster],JHEPbench[cluster],"l");
+         ///
+        normalize0 = 1./(genpth[cluster]->Integral());
+        genpth[cluster]->SetTitle("");
+        genpth[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        genpth[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        genpth[cluster]->SetLineWidth(3);
+        genpth[cluster]->Scale(normalize0);
+        //
+        normalize0 = 1./(genpthsub[cluster]->Integral());
+        genpthsub[cluster]->SetTitle("");
+        genpthsub[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        genpthsub[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        genpthsub[cluster]->SetLineWidth(3);
+        genpthsub[cluster]->Scale(normalize0);
+        //
+        normalize0 = 1./(gencost[cluster]->Integral());
+        gencost[cluster]->SetTitle("");
+        gencost[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        gencost[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        gencost[cluster]->SetLineWidth(3);
+        gencost[cluster]->Scale(normalize0);
+        gencost[cluster]->SetMinimum(0);
+        gencost[cluster]->SetMaximum(0.5);
+        //
+        normalize0 = 1./(Njets_passing_kLooseID[cluster]->Integral());
+        Njets_passing_kLooseID[cluster]->SetTitle("");
+        Njets_passing_kLooseID[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        Njets_passing_kLooseID[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        Njets_passing_kLooseID[cluster]->SetLineWidth(3);
+        Njets_passing_kLooseID[cluster]->Scale(normalize0);
+        //
+        normalize0 = 1./(btagselected[cluster]->Integral());
+        btagselected[cluster]->SetTitle("");
+        btagselected[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        btagselected[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        btagselected[cluster]->SetLineWidth(3);
+        btagselected[cluster]->Scale(normalize0);
+        //
+        normalize0 = 1./(fullmhh[cluster]->Integral());
+        fullmhh[cluster]->SetTitle("");
+        fullmhh[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        fullmhh[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        fullmhh[cluster]->SetLineWidth(3);
+        fullmhh[cluster]->Scale(normalize0);
+        //
+        normalize0 = 1./(gendeta[cluster]->Integral());
+        gendeta[cluster]->SetTitle("");
+        gendeta[cluster]->GetYaxis()->SetTitle("% of events / bin");
+        gendeta[cluster]->SetLineColor(color[cluster]);//cluster+1);
+        gendeta[cluster]->SetLineWidth(3);
+        gendeta[cluster]->Scale(normalize0);
+        gendeta[cluster]->SetMaximum(0.3);
+        // [cluster]  fullmhh
+        // 
+        //if(cluster >0)genmbb[cluster]->Draw("SAME");
+        //histoJHEP_mhh[cluster][0]->Draw("same");
+        } // close to cluster
+        
+    //TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(38); 
+    //
+        PT_HAT->SetLogx(0);
+        genmbb[0]->Draw();
+        leg->Draw("same");
+        for(unsigned int cluster=1; cluster<8; cluster++) genmbb[cluster]->Draw("SAME");
+        string namefilebenchmhh = "plotKin/clu_mhh.pdf";
+        const char * filemhh = namefilebenchmhh.c_str();
+        PT_HAT->SaveAs(filemhh);//JHEP2Dmhhclu[cluster]); 
+        PT_HAT->Clear();
+        genpth[0]->Draw();
+        leg->Draw("same");
+        for(unsigned int cluster=1; cluster<8; cluster++) genpth[cluster]->Draw("SAME");
+        namefilebenchmhh = "plotKin/clu_pth.pdf";
+        const char * filepth = namefilebenchmhh.c_str();
+        PT_HAT->SaveAs(filepth);//JHEP2Dmhhclu[cluster]); 
+        PT_HAT->Clear();
+    genpthsub[0]->Draw();
+    leg->Draw("same");
+    for(unsigned int cluster=1; cluster<8; cluster++) genpthsub[cluster]->Draw("SAME");
+    namefilebenchmhh = "plotKin/clu_pthsub.pdf";
+    const char * filepthsub = namefilebenchmhh.c_str();
+    PT_HAT->SaveAs(filepthsub);//JHEP2Dmhhclu[cluster]); 
+    PT_HAT->Clear();
+    //
+    PT_HAT->SetLogx(0);
+    gencost[0]->Draw();
+    leg->Draw("same");
+    for(unsigned int cluster=1; cluster<8; cluster++) gencost[cluster]->Draw("SAME");
+    namefilebenchmhh = "plotKin/clu_cost.pdf";
+    const char * filecost = namefilebenchmhh.c_str();
+    PT_HAT->SaveAs(filecost);
+    //
+    Njets_passing_kLooseID[0]->Draw();
+    leg->Draw("same");
+    for(unsigned int cluster=1; cluster<8; cluster++) Njets_passing_kLooseID[cluster]->Draw("SAME");
+    namefilebenchmhh = "plotKin/clu_njets.pdf";
+    const char * filenjets = namefilebenchmhh.c_str();
+    PT_HAT->SaveAs(filenjets);
+    //
+    gendeta[0]->Draw();
+    leg->Draw("same");
+    for(unsigned int cluster=0; cluster<8; cluster++) gendeta[cluster]->Draw("SAME");
+    namefilebenchmhh = "plotKin/clu_DR.pdf";
+    const char * filedr = namefilebenchmhh.c_str();
+    PT_HAT->SaveAs(filedr);
+    
+} // close draw
+/////////////////////////////////////////////////////////////////////////
+/*
+void draw_out() {
+    cout<<endl<<"Draw with outlayers "<<endl;
+    // the first sample is the benchmark
+    //vector<TH2D> JHEP2D;
+    TLegend *leg = new TLegend(0.4,0.7,0.85,0.92);
+    leg->SetTextSize(0.04146853);
+    leg->SetLineColor(1);
+    leg->SetLineStyle(1);
+    leg->SetLineWidth(1);
+    leg->SetFillColor(0);
+    // draw all together
+    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(38); 
+    for(unsigned int cluster=0; cluster<8; cluster++) { 
+        stringstream clus;
+        clus << cluster;
+        
+        TCanvas* PT_HAT = new TCanvas();
+        PT_HAT->cd();
+        //
+        leg->SetHeader(JHEPbench[cluster]);
+        //////////////////////////////////////////////////
+         double normalize0 = 1./(genmbb[cluster]->Integral());
+        PT_HAT->Clear();
+        genmbb[cluster]->SetTitle("");
+        genmbb[cluster]->GetYaxis()->SetTitle("% of events / (20 GeV)");
+        genmbb[cluster]->SetLineColor(1);
+        genmbb[cluster]->SetLineWidth(3);
+        genmbb[cluster]->Scale(normalize0);
+        genmbb[cluster]->SetMaximum(2.5*genmbb[cluster][0]->GetMaximum());
+        genmbb[cluster]->Draw();
+        if(cluster ==0){
+            leg->AddEntry(genmbb[cluster],"Benchmark","l");
+        }
+        leg->Draw("same");
+        genmbb[cluster]->Draw("same");
+        string namefilebenchmhh = "plotKin/clu" + clus.str() + "_mhh_out.pdf";
+        const char * filemhh = namefilebenchmhh.c_str();
+        PT_HAT->SaveAs(filemhh);
+        ////////////////////////////
+        normalize0 = 1./(fullmhh[cluster]->Integral());
+        PT_HAT->Clear();
+        fullmhh[cluster]->SetTitle("");
+        fullmhh[cluster]->GetYaxis()->SetTitle("% of events / (20 GeV)");
+        fullmhh[cluster]->SetLineColor(1);
+        fullmhh[cluster]->SetLineWidth(3);
+        fullmhh[cluster]->Scale(normalize0);
+        fullmhh[cluster]->SetMaximum(2.8*fullmhh[cluster][0]->GetMaximum());
+        fullmhh[cluster]->Draw();
+        leg->Draw("same");
+        fullmhh[cluster]->Draw("same");
+        string namefilebenchmhhfull = "plotKin/clu" + clus.str() + "_mhh_out_full.pdf";
+        const char * filemhhfull = namefilebenchmhhfull.c_str();
+        PT_HAT->SaveAs(filemhhfull);
+        ////////////////////////////
+        ////////////////////////////
+        // 
+        PT_HAT->Clear();
+    } // close to cluster
+    /////////////////////////////////////////////////
+    
+} // close draw outlayer 
+ */
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+int HH4b(vector<PseudoJet> jets, vector<int> btag, vector<int> btrue, double weight, int cluster, int outlayer){
+    ///////////////////////////////////////////////////
+    // to use b--tag
+    vector<PseudoJet> btaggedjets; 
+    bool dobtag = true;
+    if (dobtag) {for(unsigned n=0; n<jets.size(); n++) if( btag.at(n)>0) btaggedjets.push_back(jets.at(n)); }
+        //if(btrue[n] > 0) btaggedjets.push_back(jets.at(n)); } 
+    else btaggedjets = jets; // not to use bt--tag
+    ////////////////////////////////
+    int njets=btaggedjets.size();
+    //cout<<njets<<endl;
+    if (njets>3){ // && nbtag >3
+        //fullmhh.at(cluster)->Fill((btaggedjets.at(0) + btaggedjets.at(1)+btaggedjets.at(2) + btaggedjets.at(3)).m(),weight);
+        fullmhh[cluster]->Fill((btaggedjets.at(0) + btaggedjets.at(1)+btaggedjets.at(2) + btaggedjets.at(3)).m(),weight);
+    } 
+    return njets;
+    
+}
+/////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////
 int isbtagged(vector<PseudoJet> jets, vector<int> & btag, vector<int> & bmistag, vector<int> & btrue);
 /////////////////////////////////////////////////////////////////
-int recojets(vector<PseudoJet> particles,vector<PseudoJet> & jets_akt, vector<int> & btag, vector<int> & bmistag, vector<int> & fattag, vector<int> & btrue, double weight){
+int recojets(vector<PseudoJet> particles,vector<PseudoJet> & jets_akt, vector<int> & btag, vector<int> & bmistag, vector<int> & fattag, vector<int> & btrue, double weight, int cluster, int outlayer){
     JetDefinition akt(antikt_algorithm, RR);
     ClusterSequence cs_akt(particles, akt);
     //vector<PseudoJet> jets_akt;
@@ -156,8 +363,12 @@ int recojets(vector<PseudoJet> particles,vector<PseudoJet> & jets_akt, vector<in
         } //else see = 0; 
     } // close find mass drop
     //jets = jets_akt;---
-    Njets_passing_kLooseID->Fill(njets,weight);
-    btagselected->Fill(nbtag,weight); 
+    //cout <<weight<<endl;
+    //Njets_passing_kLooseID.at(cluster)->Fill(njets,weight);
+    //btagselected.at(cluster)->Fill(nbtag,weight); 
+    Njets_passing_kLooseID[cluster]->Fill(njets,weight);
+    btagselected[cluster]->Fill(nbtag,weight); 
+    
     return njets;
 } // close cluster jets
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +383,7 @@ int isbtagged(vector<PseudoJet> jets, vector<int> & btag, vector<int> & bmistag,
             //cout<<"constituents flavour "<<constitu.at(j).user_index()<<endl;
             if(constitu.at(j).user_index() == 5 || constitu.at(j).user_index() == -5) {
                 seetruth++; id=constitu.at(j).user_index();
-                if(constitu.at(j).pt() > bjetpt && constitu.at(j).eta() < etab) {see++; nbtag++;}// to reco btag 
+                if(constitu.at(j).pt() > bjetpt && abs( constitu.at(j).eta()) < etab) {see++; nbtag++;}// to reco btag 
             }  
             //if( abs(constitu.at(j).user_index()) == 4  // work !!
             //     && constitu.at(j).pt() > bjetpt
@@ -183,7 +394,7 @@ int isbtagged(vector<PseudoJet> jets, vector<int> & btag, vector<int> & bmistag,
         //cout<<see<<endl;
         btag.push_back(see); //else btag.push_back(0); // count all tag/jet
         //if(see==0 && see2>0) bmistag.push_back(1); else bmistag.push_back(0); // count only one tag/jet
-        btrue.push_back(seetruth); 
+        if(seetruth>0 && see>0) btrue.push_back(id); else btrue.push_back(0); // to mctruth
         //cout<<"b-quarks mistagged = " <<bmistag[i] <<" b-quark = " <<btag[i] <<endl;
     } // close for each jet
     //int numbb=0; for(unsigned i=0 ; i< btrue.size() ; i++ ) numbb += btrue[i];
@@ -191,21 +402,101 @@ int isbtagged(vector<PseudoJet> jets, vector<int> & btag, vector<int> & bmistag,
     return nbtag;
 } // close isbtagged
 /////////////////////////////////////////////////////////////////////////
+
 // save the histos
 int save_hist(int isample){
-    const char* Mass;
-    Mass = Form("Control_parton_m300_%d.root",isample); 
-    cout<<" saved "<< Form("Control_parton_m4000_%d.root",isample)<<endl;
-    TFile f1(Mass, "recreate");
-    f1.cd();
-    Njets_passing_kLooseID->Write();
-    Nlep_passing_kLooseID->Write();
-    btagselected->Write();
-    for(unsigned i=0;i<10;i++) basicHadtop[i]->Write();
+    cout<<"saved histos "<<Nlep_passing_kLooseID.size()<<endl;
+    
+    for(unsigned int cluster=0; cluster<12; cluster++){ 
+        
+        //genmbb[cluster][outlayer]=(TH1D*) genmbb1->Clone();
+        //genmbb[cluster][outlayer]->SetDirectory(0);
+        
+        const char* Mass;
+        Mass = Form("higgs_4b_shower_%d_%d.root",cluster,0); 
+        cout<<" saved "<< Form("higgs_4b_shower_%d_%d.root",cluster,0)<<endl;
+        TFile f1(Mass, "recreate");
+        f1.cd();
+        
+        //Njets_passing_kLooseID[cluster][outlayer]->Write();
+        //Nlep_passing_kLooseID[cluster][outlayer]->Write();
+        //btagselected[cluster][outlayer]->Write();
+        // save to plot
+        /*
+        REmhh[cluster][outlayer]=genmbb[cluster][outlayer]; 
+        REpt[cluster][outlayer]=genpth[cluster][outlayer]; 
+        REcost[cluster][outlayer]=gencost[cluster][outlayer]; 
+        JHEP2D[cluster][outlayer]=histoJHEP_bin1[cluster][outlayer];
+        JHEPmhh[cluster][outlayer]=histoJHEP_mhh[cluster][outlayer]; 
+        JHEPpt[cluster][outlayer]=histoJHEP_pth[cluster][outlayer]; 
+        JHEPcost[cluster][outlayer]=histoJHEP_cost[cluster][outlayer];
+         */
+        //
+        genmbb[cluster]->Write();
+        fullmhh[cluster]->Write();
+        gencost[cluster]->Write();
+        //bin1re[cluster]->Write(); 
+        genpth[cluster]->Write();
+        genpthsub[cluster]->Write();
+        //
+        //fullmhh[cluster][outlayer]->Write();
+        //fullpth1[cluster][outlayer]->Write();
+        //fullpth2[cluster][outlayer]->Write();
+        //fullcost[cluster][outlayer]->Write();
+         
+        f1.Close();
+    }
+    /*
+    for(unsigned int cluster=0; cluster<12; cluster++) { 
+        const char* Mass;
+        Mass = Form("higgs_4b_shower_%d.root",cluster); 
+        cout<<" saved "<< Form("higgs_4b_shower_%d.root",cluster)<<endl;
+        TFile f1(Mass, "recreate");
+        f1.cd();
+        
+        Njets_passing_kLooseID.at(cluster)->Write();
+    Nlep_passing_kLooseID.at(cluster)->Write();
+    btagselected.at(cluster)->Write();
+    // save to plot
+    REmhh.push_back(genmbb.at(cluster)); 
+    REpt.push_back(genpth.at(cluster)); 
+    REcost.push_back(gencost.at(cluster)); 
+    JHEP2D.push_back(histoJHEP_bin1.at(cluster));
+    JHEPmhh.push_back(histoJHEP_mhh.at(cluster)); 
+    JHEPpt.push_back(histoJHEP_pth.at(cluster)); 
+    JHEPcost.push_back(histoJHEP_cost.at(cluster));
+    //
+    genmbb.at(cluster)->Write();
+    gencost.at(cluster)->Write();
+    bin1re.at(cluster)->Write(); 
+    genpth.at(cluster)->Write();
+    //
+    fullmhh.at(cluster)->Write();
+    fullpth1.at(cluster)->Write();
+    fullpth2.at(cluster)->Write();
+    fullcost.at(cluster)->Write();
     f1.Close();
-    Njets_passing_kLooseID->Reset();
-    Nlep_passing_kLooseID->Reset();
-    btagselected->Reset();
+    }
+     */
+    //
+    
+    //Njets_passing_kLooseID->Reset();
+    //Nlep_passing_kLooseID->Reset();
+    //genpth->Reset();
+    //genmbb->Reset();
+    //gencost->Reset();
+    /////////    
+
+    /////////
+    // save to plot
+    
+    /////////////////////
+    //TFile f2("Distros_V1_5p_20000ev_13sam_13TeV_all.root", "recreate");
+    //f2.cd();
+    //bin1->Write();    
+    //f2.Close();
+    //bin1->Reset();
+    ////////////////////
 
     //  basicLeptons[0]->Reset();
     //  basicLeptons[1]->Reset();
@@ -216,272 +507,310 @@ int save_hist(int isample){
     return 0;
 }
 /////////////////////////////////////////////////////////////////////////
-int decla(int mass){
+int decla(int mass, int teste){
     
-    delete gDirectory->FindObject("leptop1");
-    delete gDirectory->FindObject("hadtop1");
-    delete gDirectory->FindObject("njets_passing_kLooseID_ct4");
-    delete gDirectory->FindObject("btagselected");
-    delete gDirectory->FindObject("E1histpt");
-    delete gDirectory->FindObject("E1histeta");
-    delete gDirectory->FindObject("MetMass_ct4");
-    delete gDirectory->FindObject("H1hist");
-    delete gDirectory->FindObject("H1histpt");
-    delete gDirectory->FindObject("H1histeta");
-    delete gDirectory->FindObject("H1histphi");
-    delete gDirectory->FindObject("HW1hist");
-    delete gDirectory->FindObject("HW1histpt");
-    delete gDirectory->FindObject("HW1histeta");
-    delete gDirectory->FindObject("HW1histphi");
-    delete gDirectory->FindObject("recotruth");
-    delete gDirectory->FindObject("detabb");
-    delete gDirectory->FindObject("H1LepThist");
-    delete gDirectory->FindObject("H1LepThistpt");
-    delete gDirectory->FindObject("H1LepThisteta");
-    delete gDirectory->FindObject("H1LepThistphi");
-    delete gDirectory->FindObject("HW1LepThist");
-    delete gDirectory->FindObject("HW1LepThistpt");
-    delete gDirectory->FindObject("HW1LepThisteta");
-    delete gDirectory->FindObject("HW1LepThistphi");
-    delete gDirectory->FindObject("pnuzerror");
-    delete gDirectory->FindObject("recotruthlept");
-    delete gDirectory->FindObject("mterror");
-    delete gDirectory->FindObject("wmt");
-    delete gDirectory->FindObject("tmt");
-    delete gDirectory->FindObject("detalb");
-    delete gDirectory->FindObject("mraz");
-    delete gDirectory->FindObject("mrazt");
-    delete gDirectory->FindObject("razratio");
-    
-    
-    const char* label="without btag im reco";
-    
-    Njets_passing_kLooseID = new TH1D("njets_passing_kLooseID_ct4",  
-                                      label, 
-                                      13, -0.5, 12.5);
-    Njets_passing_kLooseID->GetYaxis()->SetTitle("");
-    Njets_passing_kLooseID->GetXaxis()->SetTitle("Njets after showering"); 
+    /*
+    //Distros_5p_20000ev_13sam_13TeV.root
+    //string folder1_st = "0-851";// from makedistros
+    TString filenameJHEP;    
+    std::stringstream sstr;
+    sstr << "Distros_5p_500000ev_12sam_13TeV_JHEP_500K.root";// "Distros_JHEP_5p_20000ev_12sam_13TeV.root"; // this come from makedistos
+    filenameJHEP = sstr.str();
+    TFile* fJHEP = new TFile(filenameJHEP);
+    if (fJHEP == NULL) cout<<" something wrong with file "<<endl;
+    cout<<" found the  file "<< filenameJHEP <<endl;
+    //fJHEP->cd(folder1_st.c_str());    
+    /////
+    fJHEP->cd();
+    for(unsigned int cluster=0; cluster<12; cluster++)  {
+        
+    string Result;          // string which will contain the result
+    ostringstream convert;   // stream used for the conversion
+    convert << cluster;      // insert the textual representation of 'Number' in the characters in the strea
+    //Result = convert.str(); // set 'Result' to the contents of the stream
+    /////
+    TString fname = convert.str() +"_bin1;1";
+    TString fnamemhh = convert.str() +"_mhh;1";
+    TString fnamept = convert.str() +"_pt;1";
+    TString fnamecost = convert.str() +"_hcths;1";
+        
+    //cout <<fname<<endl;
+    //
+    TH2D* histoJHEP_bin11 = (TH2D*)fJHEP->Get(fname);
+    TH1D* histoJHEP_mhh1 = (TH1D*)fJHEP->Get(fnamemhh);
+    TH1D* histoJHEP_pth1 = (TH1D*)fJHEP->Get(fnamept);
+    TH1D* histoJHEP_cost1 = (TH1D*)fJHEP->Get(fnamecost);
+        
+    histoJHEP_bin1.push_back(histoJHEP_bin11);
+    histoJHEP_mhh.push_back( histoJHEP_mhh1);
+    histoJHEP_pth.push_back( histoJHEP_pth1);
+    histoJHEP_cost.push_back( histoJHEP_cost1);
 
-    Nlep_passing_kLooseID = new TH1D("nlep_passing_kLooseID_ct4",  
+    histoJHEP_bin11->SetDirectory(0);
+    histoJHEP_mhh1->SetDirectory(0);
+    histoJHEP_pth1->SetDirectory(0);
+    histoJHEP_cost1->SetDirectory(0);
+        
+    }//close cluster
+    fJHEP->Close();
+     */
+
+    //////////////////////////////////////////////////////////////////////////
+    // with the outlayers - 6 per cluster - 72 histograms
+    //Distros_envelope_5p_20000ev_6sam_13TeV.root
+    
+    basicGen.resize(12);
+    basicLeptons.resize(12);
+    basicHadtop.resize(12);
+    basicLeptop.resize(12);
+    //////////
+    Njets_passing_kLooseID.resize(12);
+    Nlep_passing_kLooseID.resize(12);
+    btagselected.resize(12);
+    leptop.resize(12);
+    hadtop.resize(12);
+    fullmhh.resize(12);
+    fullpth1.resize(12);
+    fullpth2.resize(12);
+    fullcost.resize(12);
+    
+    genmbb.resize(12); 
+    genpth.resize(12);
+    genpthsub.resize(12);
+    gencost.resize(12);
+    gendeta.resize(12);
+    
+    histoJHEP_mhh.resize(12);
+    histoJHEP_pth.resize(12);
+    histoJHEP_cost.resize(12);
+    
+    
+    JHEPmhh.resize(12);
+    JHEPcost.resize(12);
+    JHEPpt.resize(12);
+    
+    REmhh.resize(12);
+    REcost.resize(12);
+    REpt.resize(12);
+    
+    for(unsigned int cluster=0; cluster<12; cluster++) {
+        //histoOutlayers->push_back();
+        //stringstream clus;
+        //clus << cluster+1;
+        //string folder1_st = "clu"+clus.str()+";1";
+        //fEnv->cd(folder1_st.c_str());
+         
+        
+
+      
+         
+    
+    const char* label="";
+    
+    TH1D *Njets_passing_kLooseID1 = new TH1D("njets_passing_kLooseID_ct4",  
+                                      label, 
+                                      17, 0.5, 18.5);
+    Njets_passing_kLooseID1->GetYaxis()->SetTitle("");
+    Njets_passing_kLooseID1->GetXaxis()->SetTitle("Njets after showering"); 
+    Njets_passing_kLooseID[cluster]=(TH1D*) Njets_passing_kLooseID1->Clone();
+    Njets_passing_kLooseID[cluster]->SetDirectory(0);
+
+    TH1D *Nlep_passing_kLooseID1 = new TH1D("nlep_passing_kLooseID_ct4",  
                                       label, 
                                       13, -0.5, 12.5);
-    Nlep_passing_kLooseID->GetYaxis()->SetTitle("");
-    Nlep_passing_kLooseID->GetXaxis()->SetTitle("Nleptons after showering"); 
-    
-    btagselected = new TH1D("btagselected",  
+    Nlep_passing_kLooseID1->GetYaxis()->SetTitle("");
+    Nlep_passing_kLooseID1->GetXaxis()->SetTitle("Nleptons after showering"); 
+    Nlep_passing_kLooseID[cluster]=(TH1D*) Nlep_passing_kLooseID1->Clone();
+    Nlep_passing_kLooseID[cluster]->SetDirectory(0);
+        
+    TH1D *btagselected1 = new TH1D("btagselected",  
                             label, 
                             13, -0.5, 12.5);
-    btagselected->GetYaxis()->SetTitle("");
-    btagselected->GetXaxis()->SetTitle("b-tagable b's on selected events");
+    btagselected1->GetYaxis()->SetTitle("");
+    btagselected1->GetXaxis()->SetTitle("b-tagable b's on selected events");
+    btagselected[cluster]=(TH1D*) btagselected1->Clone();
+    btagselected[cluster]->SetDirectory(0);
     
+    genmbb1 = new TH1D("higgs_mhh",  
+                      label, 
+                      30,110.,3500.);
+    genmbb1->GetYaxis()->SetTitle("");
+    genmbb1->GetXaxis()->SetTitle("m_{hh}^{gen}");
+            genmbb[cluster]=(TH1D*) genmbb1->Clone();
+            genmbb[cluster]->SetDirectory(0);
+            //genmbb1->SetDirectory(0);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // for hadronic tops
-    TH1D *H1hist = new TH1D("H1hist",  
-                            label, 
-                            200, 0, 2000);
-    H1hist->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1hist->GetXaxis()->SetTitle("mass_{4 #tau} (GeV)");
-    basicHadtop.push_back (H1hist); 
-    
-    TH1D *H1histpt = new TH1D("H1histpt",  
-                              label, 
-                              100, 0, 1000);
-    H1histpt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1histpt->GetXaxis()->SetTitle("j_1 P_T (GeV)");
-    basicHadtop.push_back (H1histpt); 
-    
-    TH1D *H1histeta = new TH1D("H1histeta",  
-                               label, 
-                               30, -6, 6);
-    H1histeta->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1histeta->GetXaxis()->SetTitle("j_1 #eta");
-    basicHadtop.push_back (H1histeta); 
-    
-    TH1D *H1histphi = new TH1D("H1histphi",  
-                               label, 
-                               100, 0, 1000);
-    H1histphi->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1histphi->GetXaxis()->SetTitle("j_2 P_T  (GeV)");
-    basicHadtop.push_back (H1histphi); 
-    // had w
-    TH1D *HW1hist = new TH1D("HW1hist",  
-                             label, 
-                             30, -6, 6);
-    HW1hist->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1hist->GetXaxis()->SetTitle("j_2 #eta");
-    basicHadtop.push_back (HW1hist); 
-    
-    TH1D *HW1histpt = new TH1D("HW1histpt",  
-                               label, 
-                               100, 0, 600);
-    HW1histpt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1histpt->GetXaxis()->SetTitle("W_{had} P_T (GeV)");
-    basicHadtop.push_back (HW1histpt); 
-    
-    TH1D *HW1histeta = new TH1D("HW1histeta",  
-                                label, 
-                                30, -6, 6);
-    HW1histeta->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1histeta->GetXaxis()->SetTitle("#eta_{W_{had}} (GeV)");
-    basicHadtop.push_back (HW1histeta); 
-    
-    TH1D *HW1histphi = new TH1D("HW1histphi",  
-                                label, 
-                                30, 0, 5);
-    HW1histphi->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1histphi->GetXaxis()->SetTitle("#phi_{W_{had}} (GeV)");
-    basicHadtop.push_back (HW1histphi); 
-    
-    TH1D *recotruth = new TH1D("recotruth",  
-                               label, 
-                               3, -0.5, 2.5);
-    recotruth->GetYaxis()->SetTitle("Events/ 2 GeV");
-    recotruth->GetXaxis()->SetTitle("reco truth");
-    basicHadtop.push_back (recotruth); 
-    
-    TH1D *detabb = new TH1D("detabb",  
-                            label, 
-                            30, 0., 5);
-    detabb->GetYaxis()->SetTitle("Events/ 2 GeV");
-    detabb->GetXaxis()->SetTitle("#Delta#eta bb");
-    basicHadtop.push_back (detabb); 
-    ///////////////////////////////////////////////////////////////////////////
-    // for leptonic tops
-    TH1D *H1LepThist = new TH1D("H1LepThist",  
-                                label, 
-                                70, 0, 1000);
-    H1LepThist->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1LepThist->GetXaxis()->SetTitle("mass t_{lep} (GeV)");
-    basicLeptop.push_back (H1LepThist); 
-    
-    TH1D *H1LepThistpt = new TH1D("H1LepThistpt",  
-                                  label, 
-                                  20, 0, 300);
-    H1LepThistpt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1LepThistpt->GetXaxis()->SetTitle("t_{lep} P_T (GeV)");
-    basicLeptop.push_back (H1LepThistpt); 
-    
-    TH1D *H1LepThisteta = new TH1D("H1LepThisteta",  
-                                   label, 
-                                   30, -6, 6);
-    H1LepThisteta->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1LepThisteta->GetXaxis()->SetTitle("#eta_{t_{lep}} (GeV)");
-    basicLeptop.push_back (H1LepThisteta); 
-    
-    TH1D *H1LepThistphi = new TH1D("H1LepThistphi",  
-                                   label, 
-                                   30, 0, 5);
-    H1LepThistphi->GetYaxis()->SetTitle("Events/ 2 GeV");
-    H1LepThistphi->GetXaxis()->SetTitle("#phi_{t_{lep}} (GeV)");
-    basicLeptop.push_back (H1LepThistphi); 
-    // had w
-    TH1D *HW1LepThist = new TH1D("HW1LepThist",  
+
+    TH1D *genpth1 = new TH1D("higgs_pt",  
+                      label, 
+                      30,0.,1600.);
+    genpth1->GetYaxis()->SetTitle("");
+    genpth1->GetXaxis()->SetTitle("leading p_{T}^{h, gen}");     
+        genpth[cluster]=(TH1D*) genpth1->Clone();
+        genpth[cluster]->SetDirectory(0);
+
+        TH1D *genpth1sub = new TH1D("higgs_ptsub",  
                                  label, 
-                                 100, 80, 81);
-    HW1LepThist->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1LepThist->GetXaxis()->SetTitle("mass W_{lep} (GeV)");
-    basicLeptop.push_back (HW1LepThist); 
+                                 20,0.,1200.);
+        genpth1sub->GetYaxis()->SetTitle("");
+        genpth1sub->GetXaxis()->SetTitle("subleading p_{T}^{h, gen}");     
+        genpthsub[cluster]=(TH1D*) genpth1sub->Clone();
+        genpthsub[cluster]->SetDirectory(0);
+        
+    TH1D *gencost1 = new TH1D("cost_h",  
+                      label, 
+                      //5,0.,1.);
+                              10,0,5.);
+    gencost1->GetYaxis()->SetTitle("");
+    //gencost1->GetXaxis()->SetTitle("higgs cos#theta^{*}"); 
+        gencost1->GetXaxis()->SetTitle("#eta_{h^{leading}}"); 
+        gencost[cluster]=(TH1D*) gencost1->Clone();
+        gencost[cluster]->SetDirectory(0);
+
+        TH1D *gendeta1 = new TH1D("deta_h",  
+                                  label, 
+                                  12,0.,5.);
+        gendeta1->GetYaxis()->SetTitle("");
+        gendeta1->GetXaxis()->SetTitle("higgs #Delta #R_{hh}"); 
+        gendeta[cluster]=(TH1D*) gendeta1->Clone();
+        gendeta[cluster]->SetDirectory(0);
+        
+        /*
+    TH2D *bin11 = new TH2D("all",  
+                      label, 
+                      90,0.,1800.,10,-1,1.);
+    bin11->GetYaxis()->SetTitle("");
+    bin11->GetXaxis()->SetTitle("mhh X cost*");
+    bin1[cluster]=(TH2D*) bin11->Clone();
+    bin1[cluster]->SetDirectory(0);
+        
+    TH2D *bin1re1 = new TH2D("allre",  
+                    label, 
+                    90,0.,1800.,10,-1,1.);
+    bin1re1->GetYaxis()->SetTitle("");
+    bin1re1->GetXaxis()->SetTitle("mhh X cost*"); 
+    bin1re[cluster]=(TH2D*) bin1re1->Clone();
+    bin1re[cluster]->SetDirectory(0);
+        */
+        
+    TH1D *leptop1 = new TH1D("j1_pt",  
+                      label, 
+                      100, 0, 600);
+    //leptop->SetLogY(1);    
+    leptop1->GetYaxis()->SetTitle("");
+    leptop1->GetXaxis()->SetTitle("leading jet pt"); 
+        leptop[cluster]=(TH1D*) leptop1->Clone();
+          leptop1->SetDirectory(0);
+        
+    TH1D *hadtop1 = new TH1D("j1_eta",  
+                      label, 
+                      20, 5, -5);
+    hadtop1->GetYaxis()->SetTitle("");
+    hadtop1->GetXaxis()->SetTitle("leading jet eta"); 
+        hadtop[cluster]=(TH1D*) hadtop1->Clone();
+          hadtop1->SetDirectory(0);
+        
+    //////
     
-    TH1D *HW1LepThistpt = new TH1D("HW1LepThistpt",  
-                                   label, 
-                                   20, 0, 300);
-    HW1LepThistpt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1LepThistpt->GetXaxis()->SetTitle("W_{lep} P_{T} (GeV)"); 
-    basicLeptop.push_back (HW1LepThistpt); 
-    
-    TH1D *HW1LepThisteta = new TH1D("HW1LepThisteta",  
-                                    label, 
-                                    30, -6, 6);
-    HW1LepThisteta->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1LepThisteta->GetXaxis()->SetTitle("#eta_{W_{lep}} (GeV)");
-    basicLeptop.push_back (HW1LepThisteta); 
-    
-    TH1D *HW1LepThistphi = new TH1D("HW1LepThistphi",  
-                                    label, 
-                                    30, 0, 5);
-    HW1LepThistphi->GetYaxis()->SetTitle("Events/ 2 GeV");
-    HW1LepThistphi->GetXaxis()->SetTitle("#phi_{W_{lep}} (GeV)");
-    basicLeptop.push_back (HW1LepThistphi); 
-    
-    TH1D *pnuzerror = new TH1D("pnuzerror",  
-                               label, 
-                               120, -60, 60);
-    pnuzerror->GetYaxis()->SetTitle("Events/ 2 GeV");
-    pnuzerror->GetXaxis()->SetTitle("mW(reco) - mW(truth)");
-    basicLeptop.push_back (pnuzerror); 
-    
-    TH1D *recotruthlept = new TH1D("recotruthlept",  
-                                   label, 
-                                   3, -0.5, 2.5);
-    recotruthlept->GetYaxis()->SetTitle("Events/ 2 GeV");
-    recotruthlept->GetXaxis()->SetTitle("reco truth lept");
-    basicLeptop.push_back (recotruthlept); 
-    
-    TH1D *mterror = new TH1D("mterror",  
-                             label, 
-                             120, -60, 60);
-    mterror->GetYaxis()->SetTitle("Events/ 2 GeV");
-    mterror->GetXaxis()->SetTitle("mt(reco) - mt(truth)");
-    basicLeptop.push_back (mterror); 
-    
-    TH1D *wmt = new TH1D("wmt",  
-                         label, 
-                         75, 0, 150);
-    wmt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    wmt->GetXaxis()->SetTitle("W transverse mass");
-    basicLeptop.push_back (wmt); 
-    
-    TH1D *tmt = new TH1D("tmt",  
-                         label, 
-                         50, 0, 600);
-    tmt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    tmt->GetXaxis()->SetTitle("Top transverse mass (Wb)");
-    basicLeptop.push_back (tmt); 
-    
-    TH1D *detalb = new TH1D("detalb",  
-                            label, 
-                            30, 0, 6);
-    detalb->GetYaxis()->SetTitle("Events/ 2 GeV");
-    detalb->GetXaxis()->SetTitle("#Delta#eta b l");
-    basicLeptop.push_back (detalb); 
-    
-    TH1D *mraz = new TH1D("mraz",  
-                          label, 
-                          150, 0, 1000);
-    mraz->GetYaxis()->SetTitle("Events/ 2 GeV");
-    mraz->GetXaxis()->SetTitle("MR");
-    basicLeptop.push_back (mraz); 
-    
-    TH1D *mrazt = new TH1D("mrazt",  
-                           label, 
-                           150, 0, 300);
-    mrazt->GetYaxis()->SetTitle("Events/ 2 GeV");
-    mrazt->GetXaxis()->SetTitle("MRt");
-    basicLeptop.push_back (mrazt); 
-    
-    TH1D *razratio = new TH1D("razratio",  
-                              label, 
-                              100, 0, 1);
-    razratio->GetYaxis()->SetTitle("Events/ 2 GeV");
-    razratio->GetXaxis()->SetTitle("MRt/MR");
-    basicLeptop.push_back (razratio); 
-    
-    TH1D *tmtal = new TH1D("tmtal",  
-                           label, 
-                           50, 0, 600);
-    tmtal->GetYaxis()->SetTitle("Events/ 2 GeV");
-    tmtal->GetXaxis()->SetTitle("top transverse mass (lb - #nu)");
-    basicLeptop.push_back (tmtal); 
-    
-    TH1D *mbl = new TH1D("massbl",  
-                         label, 
-                         30, 0, 1000);
-    mbl->GetYaxis()->SetTitle("Events/ 2 GeV");
-    mbl->GetXaxis()->SetTitle("m_{lb}");
-    basicLeptop.push_back (mbl); 
+    TH1D *fullmhh1 = new TH1D("higgs_mhh_full",  
+                      label, 
+                      60,0.,1800.);
+    fullmhh1->GetYaxis()->SetTitle("");
+    fullmhh1->GetXaxis()->SetTitle("di-higgs invariant mass (shower)"); 
+    fullmhh[cluster]=(TH1D*) fullmhh1->Clone();
+    fullmhh[cluster]->SetDirectory(0);
+
+    TH1D *fullpth11 = new TH1D("higgs_pt1",  
+                      label, 
+                      50,0.,2000.);
+    fullpth11->GetYaxis()->SetTitle("");
+    fullpth11->GetXaxis()->SetTitle("Leading higgs p_{T}"); 
+        fullpth1[cluster]=(TH1D*) fullpth11->Clone();
+          fullpth11->SetDirectory(0);
+        
+    TH1D *fullpth21 = new TH1D("higgs_pt2",  
+                        label, 
+                        60,0.,1200.);
+    fullpth21->GetYaxis()->SetTitle("");
+    fullpth21->GetXaxis()->SetTitle("Sub-leading higgs p_{T}"); 
+        fullpth2[cluster]=(TH1D*) fullpth21->Clone();
+          fullpth21->SetDirectory(0);
+        
+    TH1D *fullcost1 = new TH1D("cost_h_full",  
+                       label, 
+                       5,0.,1.);
+    fullcost1->GetYaxis()->SetTitle("");
+    fullcost1->GetXaxis()->SetTitle("higgs cos#theta^{*} (shower)"); 
+        fullcost[cluster]=(TH1D*) fullcost1->Clone();    
+          fullcost1->SetDirectory(0);
     ///////////////////////////////////////////////////////////////////////////////////
+    }// close for outlayer
+
+    /////////////////////////////////////////////////////////
     return 0;
+}
+
+void style (){
+    TStyle *defaultStyle = new TStyle("defaultStyle","Default Style");
+    defaultStyle->SetOptStat(0000);
+    defaultStyle->SetOptFit(000); 
+    defaultStyle->SetPalette(1);
+    /////// pad ////////////
+    defaultStyle->SetPadBorderMode(1);
+    defaultStyle->SetPadBorderSize(1);
+    defaultStyle->SetPadColor(0);
+    defaultStyle->SetPadTopMargin(0.05);
+    defaultStyle->SetPadBottomMargin(0.15);
+    defaultStyle->SetPadLeftMargin(0.15);
+    defaultStyle->SetPadRightMargin(0.16);
+    /////// canvas /////////
+    defaultStyle->SetCanvasBorderMode(0);
+    defaultStyle->SetCanvasColor(0);
+    defaultStyle->SetCanvasDefH(600);
+    defaultStyle->SetCanvasDefW(600);
+    /////// frame //////////
+    defaultStyle->SetFrameBorderMode(0);
+    defaultStyle->SetFrameBorderSize(1);
+    defaultStyle->SetFrameFillColor(0); 
+    defaultStyle->SetFrameLineColor(1);
+    /////// label //////////
+    defaultStyle->SetLabelOffset(0.005,"XY");
+    defaultStyle->SetLabelSize(0.06,"XY");
+    defaultStyle->SetLabelFont(46,"XY");
+    /////// title //////////
+    defaultStyle->SetTitleOffset(1.1,"X");
+    defaultStyle->SetTitleSize(0.01,"X");
+    defaultStyle->SetTitleOffset(1.25,"Y");
+    defaultStyle->SetTitleSize(0.06,"Y");
+    defaultStyle->SetTitleFont(44, "XYZ");
+    /////// various ////////
+    defaultStyle->SetNdivisions(505,"Y");
+    defaultStyle->SetLegendBorderSize(0);  // For the axis titles:
+    
+    defaultStyle->SetTitleColor(1, "XYZ");
+    defaultStyle->SetTitleFont(42, "XYZ");
+    defaultStyle->SetTitleSize(0.055, "XYZ");
+    
+    // defaultStyle->SetTitleYSize(Float_t size = 0.02);
+    defaultStyle->SetTitleXOffset(0.85);
+    defaultStyle->SetTitleYOffset(1.05);
+    // defaultStyle->SetTitleOffset(1.1, "Y"); // Another way to set the Offset
+    
+    // For the axis labels:
+    defaultStyle->SetLabelColor(1, "XYZ");
+    defaultStyle->SetLabelFont(42, "XYZ");
+    defaultStyle->SetLabelOffset(0.007, "XYZ");
+    defaultStyle->SetLabelSize(0.042, "XYZ");
+    
+    // For the axis:
+    defaultStyle->SetAxisColor(1, "XYZ");
+    defaultStyle->SetStripDecimals(kTRUE);
+    defaultStyle->SetTickLength(0.03, "XYZ");
+    defaultStyle->SetNdivisions(510, "XYZ");
+    defaultStyle->SetPadTickX(1);   // To get tick marks on the opposite side of the frame
+    defaultStyle->SetPadTickY(1);
+    defaultStyle->cd();
+    return;
 }
 
 

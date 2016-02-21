@@ -19,7 +19,7 @@ int main() {
     //////////////////////////////////////////////////
     // input
     //string fileparton = "Wt_5.lhe.decayed"; 
-     string fileparton = "BulkGraviton_hh_hbbhbb_Width5pc_M2000/unweighted_events.lhe.shower" ; 
+     string fileparton = "/Users/Xanda/cernbox/Topone_higgs/Bp_signal/MR_700_on.lhe.shower" ; 
     cout<<"\n\n reading file = "<<fileparton<<endl;
     // open the file
     ifstream in1; in1.open(fileparton.c_str());

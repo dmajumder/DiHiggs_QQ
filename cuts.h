@@ -17,13 +17,13 @@ double const genmasslepmin=0; // genmass
 double const bjetpt = 30.0; 
 double const mbblow = 0.0; 
 // basline
-double const jet_ptmin=20.0; // parton for jet reconstruction
+double const jet_ptmin=0.0; // parton for jet reconstruction
 double const jet_ptminfinal=30.0; // in final jet reconstruction
 double const rapmax=5.0; // for jet reconstruction
-double const etab = 15;
-double const etal = 15;
-double const etaj=15;
-double const RR =0.80;
+double const etab = 2.5;
+double const etal = 2.5;
+double const etaj=5;
+double const RR =0.5;
 double const ptlepton = 0.;
 double const lepiso = 0.0;
 // analysis cuts
