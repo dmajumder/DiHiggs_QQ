@@ -51,42 +51,132 @@ int main() {
     //////////////////////////////////////////////////
     // input
     // we are going to have only four samples, with 180 GeV mt selection, merge them and separate
-    string path[1]={"/Users/Xanda/Documents/programs/VLQ_h_light/TT_hh/Graviton_Parton/MGraviton_"};
-    string sample[8] = { 
-        "260.lhe",
-        "350.lhe",
-        "450.lhe",
-        "800.lhe",
-        "1000.lhe",
-        "1500.lhe",
-        "2000.lhe",
-        "2500.lhe"
+    /*
+    string path[1]={"/Users/Xanda/Documents/programs/VLQ_h_light/"};
+    string sample[9] = { 
+        "TT_hh_benj/Graviton_Parton/MGraviton_500.lhe",
+        //"Th_hh_benj/Graviton_Parton/MGraviton_800.lhe",
+        "TT_hh_benj/Graviton_Parton/MGraviton_1000.lhe",
+        //"Th_hh_benj/Graviton_Parton/MGraviton_1500.lhe",
+        "TT_hh_benj/Graviton_Parton/MGraviton_2000.lhe",
+        //"Th_hh_benj/Graviton_Parton/MGraviton_2500.lhe",
+        "TT_hh_benj/Graviton_Parton/MGraviton_3000.lhe",
+        //
+        "BB_hh_benj/Graviton_Parton/MGraviton_500.lhe",
+        //"Bh_hh_benj/Graviton_Parton/MGraviton_800.lhe",
+        "BB_hh_benj/Graviton_Parton/MGraviton_1000.lhe",
+        //"Bh_hh_benj/Graviton_Parton/MGraviton_1500.lhe",
+        "BB_hh_benj/Graviton_Parton/MGraviton_2000.lhe",
+        //"Bh_hh_benj/Graviton_Parton/MGraviton_2500.lhe",
+        "BB_hh_benj/Graviton_Parton/MGraviton_3000.lhe",
+        "pp_hh_lhe/SM_loop_from_NLO.lhe"
 
     };// width
+    //*/
+    /*
+    string path[1]={"/Users/Xanda/Documents/programs/VLQ_h_light/"};
+    string sample[9] = { 
+        "Th_hh_benj/Graviton_Parton/MGraviton_500.lhe",
+        //"Th_hh_benj/Graviton_Parton/MGraviton_800.lhe",
+        "Th_hh_benj/Graviton_Parton/MGraviton_1000.lhe",
+        //"Th_hh_benj/Graviton_Parton/MGraviton_1500.lhe",
+        "Th_hh_benj/Graviton_Parton/MGraviton_2000.lhe",
+        //"Th_hh_benj/Graviton_Parton/MGraviton_2500.lhe",
+        "Th_hh_benj/Graviton_Parton/MGraviton_3000.lhe",
+        //
+        "Bh_hh_benj/Graviton_Parton/MGraviton_500.lhe",
+        //"Bh_hh_benj/Graviton_Parton/MGraviton_800.lhe",
+        "Bh_hh_benj/Graviton_Parton/MGraviton_1000.lhe",
+        //"Bh_hh_benj/Graviton_Parton/MGraviton_1500.lhe",
+        "Bh_hh_benj/Graviton_Parton/MGraviton_2000.lhe",
+        //"Bh_hh_benj/Graviton_Parton/MGraviton_2500.lhe",
+        "Bh_hh_benj/Graviton_Parton/MGraviton_3000.lhe",
+        "pp_hh_lhe/SM_loop_from_NLO.lhe"
+        
+    };// width
+    //*/
+    ///*
+    string path[1]={"/Users/Xanda/Documents/programs/VLQ_h_light/pp_hh_lhe/"};
+    string sample[10] = { 
+        "Top/K2.03252MQ500.lhe",
+        //"Top/K3.25203MQ800.lhe",
+        "Top/K4.06504MQ1000.lhe",
+        //"Top/K6.09756MQ1500.lhe",
+        //"Top/K8.13008MQ2000.lhe",
+        "Top/K10.1626MQ2500.lhe",
+
+        //
+        "Up/K2.03252MQ500.lhe",
+        //"Up/K3.25203MQ800.lhe",
+        "Up/K4.06504MQ1000.lhe",
+        //"Up/K6.09756MQ1500.lhe",
+        //"Up/K8.13008MQ2000.lhe",
+        "Up/K10.1626MQ2500.lhe",
+
+        //
+        "Down/K2.03252MQ500.lhe",
+        //"Down/K3.25203MQ800.lhe",
+        "Down/K4.06504MQ1000.lhe",
+        //"Down/K6.09756MQ1500.lhe",
+        //"Down/K8.13008MQ2000.lhe",
+        "Down/K10.1626MQ2500.lhe",
+        "SM_loop_from_NLO.lhe"
+        
+    };// width
+    // */
+    /*
+    string path[1]={"/Users/Xanda/Documents/programs/MG_NLO/"};
+    string sample[13] = { 
+        "VLQ_hh_Do/hh_lhe_Bottom/K2.03252MQ500.lhe",
+        //"VLQ_hh_Do/hh_lhe_Bottom/K3.25203MQ800.lhe",
+        "VLQ_hh_Do/hh_lhe_Bottom/K4.06504MQ1000.lhe",
+        //"VLQ_hh_Do/hh_lhe_Bottom/K6.09756MQ1500.lhe",
+        //"VLQ_hh_Do/hh_lhe_Bottom/K8.13008MQ2000.lhe",
+        "VLQ_hh_Do/hh_lhe_Bottom/K10.1626MQ2500.lhe",
+        
+        //
+        "VLQ_hh_Up/hh_lhe_Up/K2.03252MQ500.lhe",
+        //"VLQ_hh_Up/hh_lhe_Up/K3.25203MQ800.lhe",
+        "VLQ_hh_Up/hh_lhe_Up/K4.06504MQ1000.lhe",
+        //"VLQ_hh_Up/hh_lhe_Up/K6.09756MQ1500.lhe",
+        //"VLQ_hh_Up/hh_lhe_Up/K8.13008MQ2000.lhe",
+        "VLQ_hh_Up/hh_lhe_Up/K10.1626MQ2500.lhe",
+        
+        //
+        "VLQ_hh_Do/hh_lhe_Down/K2.03252MQ500.lhe",
+        //"VLQ_hh_Do/hh_lhe_Down/K3.25203MQ800.lhe",
+        "VLQ_hh_Do/hh_lhe_Down/K4.06504MQ1000.lhe",
+        //"VLQ_hh_Do/hh_lhe_Down/K6.09756MQ1500.lhe",
+        //"VLQ_hh_Do/hh_lhe_Down/K8.13008MQ2000.lhe",
+        "VLQ_hh_Do/hh_lhe_Down/K10.1626MQ2500.lhe",
+        "../VLQ_h_light/pp_hh_lhe/SM_loop_from_NLO.lhe"
+        
+    };// width
+     //*/
     /////////////////////////////////////////////
     // here we put the options for ploting
     style ();
     ///////////////////////////////////////////////////////// 
     // vector to make a table
     /////////////////////////////////////////////////////////
-    double nevents =5000; // /fb
+    double nevents =10000; // /fb
     //////////////////////////////////////////////////////////////////////////////////
     // to each cut deffinition and each one of the four region deffintions I pass by the four files and then save 
     //int cluster = 10;       // cluster number
     //for(unsigned int outlayer=0; outlayer<6; outlayer++) { // six outlayers
-    double listweight[12];
+    double listweight[19];
     // to efficiencies
     // vector<vector<int>> A(dimension, vector<int>(dimension));
-    double total[12];
-    double selected[12];
-    double selected4b[12];
-    for(unsigned int isample=0; isample<8; isample++) {
+    double total[19];
+    double selected[19];
+    double selected4b[19];
+    for(unsigned int isample=0; isample<10; isample++) {
         total[isample]=0;
         selected[isample]=0;
         selected4b[isample]=0;
     }
     decla(0,0); // sum all samples | take the histo for one cluster
-    for(unsigned int isample=0; isample<8; isample++)  { // samples ...    
+    for(unsigned int isample=0; isample<10; isample++)  { // samples ...    
         
         //////////////////////////////////////////////
         fileshower = path[0] + sample[isample] +  datashower; cout<<"\n\n reading file = "<<fileshower<<endl;
@@ -100,6 +190,7 @@ int main() {
             vector<PseudoJet> neutrinos;
             vector<PseudoJet> leptons; 
             vector<PseudoJet> tops; 
+            vector<PseudoJet> Topone; 
             vector<PseudoJet> higgses; // the two first are the gen level ones 
             /////////////////////////////////////////////////////////////////////
             // read and understand
@@ -110,6 +201,7 @@ int main() {
                 if(abs(pID) < 6 || pID==21){particles.push_back(fastjet::PseudoJet(Px,Py,Pz,E));particles.at(counter).set_user_index(pID); if(abs(pID) == 5) nb++; counter++;} 
                 else if (abs(pID)==6) {tops.push_back(fastjet::PseudoJet(Px,Py,Pz,E)); countert++;} 
                 else if (abs(pID)==25) {higgses.push_back(fastjet::PseudoJet(Px,Py,Pz,E));} 
+                else if (abs(pID)>6000000) {Topone.push_back(fastjet::PseudoJet(Px,Py,Pz,E));} 
                 else if (abs(pID)==11 || abs(pID)==13) {leptons.push_back(fastjet::PseudoJet(Px,Py,Pz,E)); leptons.at(counterl).set_user_index(pID); counterl++;} 
                 else if (abs(pID)==12 || abs(pID)==14) {neutrinos.push_back(fastjet::PseudoJet(Px,Py,Pz,E)); neutrinos.at(countern).set_user_index(pID); countern++;} // close if 
             } // close for each particle
@@ -117,7 +209,7 @@ int main() {
            // for(unsigned int outlayer=0; outlayer<6; outlayer++) for(unsigned int clusterr=0; clusterr<12; clusterr++) {
                 //cout<<"event "<< ievent<<" here cluster "<<clusterr<<" here out "<< outlayer<<endl;
             //cout<<higgses.size()<<endl;
-                double weight =  GenLevelWeight(higgses,isample,0);
+                double weight =  GenLevelWeight(higgses,particles,Topone,isample,0);
                 //for(unsigned int outlayer=0; outlayer<6; outlayer++) for(unsigned int clusterr=2; clusterr<3; clusterr++) {
                 //    cout<<"here cluster "<<clusterr<<" here out "<< outlayer<<endl;
                 // { // clusters

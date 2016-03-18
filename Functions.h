@@ -11,7 +11,7 @@ void load();
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 // tags
-double GenLevelWeight(vector<PseudoJet>, int,int);
+double GenLevelWeight(vector<PseudoJet>, vector<PseudoJet> , vector<PseudoJet> , int,int);
 int HH4b(vector<PseudoJet> jets, vector<int> btag, vector<int> btrue, double weight,int cluster, int);
 ////
 int recojets(vector<PseudoJet> particles,vector<PseudoJet> & jets, vector<int> & btag, 

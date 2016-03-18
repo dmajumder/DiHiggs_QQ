@@ -19,12 +19,15 @@ vector<TH1D*>  fullmhh;
 vector<TH1D*>  fullpth1;
 vector<TH1D*>  fullpth2;
 vector<TH1D*>  fullcost;
+vector<TH1D*>  toponept; 
+
 
 vector<TH1D*>  genmbb; 
 TH1D *genmbb1;
 vector<TH1D*>  genpth;
 vector<TH1D*>  genpthsub;
 vector<TH1D*>  gencost;
+vector<TH1D*>  gencost2;
 vector<TH1D*>  gendeta;
 TH2D*  bin1;
 TH2D*  bin1re;
@@ -51,15 +54,15 @@ vector<TH1D*>  REpt;
 
 
 
-const char* JHEPbench[12]={
-    "260",
-    "350",
-    "450",
+const char* JHEPbench[16]={
     "500",
+    //"800",
     "1000",
-    "1500",
-    "2000",
-    "2500"};
+    //"1500",
+    //"2000",
+    "2500",
+    "3000",
+    "B'"};
 
 const char* JHEP2Dclu[12]={
     "JHEP2D_cluster0.png","JHEP2D_cluster1.png","JHEP2D_cluster2.png",
