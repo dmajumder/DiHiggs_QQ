@@ -27,6 +27,7 @@
 #include <complex.h>    /* Standard c++ Library of Complex Numbers */
 #include "rootHistos.h" //declare the histos
 #include "cuts.h" // basic cuts 
+const int nsamples = 8;
 using namespace fastjet;
 using namespace std;
 /////////////////////////////////////////////////////////////////
@@ -36,7 +37,10 @@ double GenLevelWeight( vector<PseudoJet>  higgses , vector<PseudoJet>  genjet ,v
     double weight;
     //cout<<"cluster "<<cluster<<" outlayer "<<outlayer<<endl;
     //cout<<" here "<<histoJHEP_bin1.size()<<" "<<histoJHEP_bin1[cluster].size()<<endl;
+    //cout<<higgses.size()<<" "<<topo.size()<<endl;
+    if(topo.size()>0)toponept[cluster]->Fill(topo.at(0).pt(),weight);
     if(higgses.size()>1){
+        
         // only the first tow are the gen level ones
         PseudoJet higgs0 = higgses.at(0); 
         PseudoJet higgs1 = higgses.at(1);
@@ -47,7 +51,7 @@ double GenLevelWeight( vector<PseudoJet>  higgses , vector<PseudoJet>  genjet ,v
             P1boost.Boost(-P12.BoostVector());                     
             Double_t costhetast = P1boost.CosTheta();
             //cout<<"here 2 "<<costhetast<<endl;
-            Double_t mhh = (higgs0+higgs1).m();
+            Double_t mhh = (higgs0+higgs1).m(); //cout<<" entered "<<higgses.size()<<" mhh "<< mhh<<" "<<topo.size()<<endl;
             Double_t pth0 = (higgs0).pt(); 
             Double_t pth1 = (higgs1).pt();// sort by pt
             Double_t pth, pthsub;
@@ -56,7 +60,7 @@ double GenLevelWeight( vector<PseudoJet>  higgses , vector<PseudoJet>  genjet ,v
             weight = 1;
             //cout<<"here "<<weight<< " "<<mhh  <<endl;
             //genmbb1->Fill(mhh,weight);
-            if(topo.size()>0)toponept[cluster]->Fill(topo.at(0).pt(),weight);
+            
             genmbb[cluster]->Fill(mhh,weight); 
             genpth[cluster]->Fill(pth,weight);
             genpthsub[cluster]->Fill(pthsub,weight);
@@ -114,7 +118,7 @@ void draw() {
     leg2->SetLineStyle(1);
     leg2->SetLineWidth(1);
     leg2->SetFillColor(0);
-/*    
+///*    
     int color[16] = {
         221,//224,
         225,//228,
@@ -131,7 +135,7 @@ void draw() {
         2,2,2,2,//2,2,2
         1};
  //*/
-    ///*
+    /*
     int color[19] = {
         8,//224,
         225,//228,
@@ -159,14 +163,15 @@ void draw() {
     TCanvas* PT_HAT = new TCanvas();
     PT_HAT->cd();
     PT_HAT->Clear();
-    for(unsigned int cluster=0; cluster<10; cluster++) { // 10 to hh
+    cout<<genmbb[0]->Integral()<<" mhh histo"<<endl;
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) { // 10 to hh
         cout<<cluster<<endl;
         stringstream clus;
         clus << cluster;
         leg->SetHeader("m_{Q} (GeV)");
-        leg2->SetHeader("#kappa = 1 (ggF)");
+        //leg2->SetHeader("#kappa = 1 (ggF)");
         //leg2->SetHeader("Quark initiated");
-        //leg2->SetHeader("QQ");
+        leg2->SetHeader("QQ LO");
         double normalize0 = 1./(genmbb[cluster]->Integral());
         //double normalize1 = 1./(histoJHEP_mhh[cluster][0]->Integral());
         cout<<"sumV1: "<< 1/normalize0<<" JHEP: "<<1/normalize0<<endl;
@@ -184,21 +189,25 @@ void draw() {
         //////
         // to hh+ jets
         //////
-        /*
+        ///*
         if(cluster==8) genmbb[cluster]->Scale(0.4);
         genmbb[cluster]->SetMaximum(0.28);//0.21);//0.61
         //genmbb[cluster][0]->SetMaximum(1.2*genmbb[cluster][0]->GetMaximum());
         if(cluster<4)leg->AddEntry(genmbb[cluster],JHEPbench[cluster],"l");
         //if(cluster==1)leg2->AddEntry(genmbb[cluster],"Top partner","l");
         //if(cluster==1)leg2->AddEntry(genmbb[cluster],"Bottom partner","l");
-        if(cluster==1)leg2->AddEntry(genmbb[cluster],"Up partner","l");
-        if(cluster==4)leg2->AddEntry(genmbb[cluster],"Down partner","l");
-        if(cluster==8)leg2->AddEntry(genmbb[cluster],"SM","l");
+        //
+        //if(cluster==1)leg2->AddEntry(genmbb[cluster],"Up partner","l");
+        //if(cluster==4)leg2->AddEntry(genmbb[cluster],"Down partner","l");
+        //if(cluster==8)leg2->AddEntry(genmbb[cluster],"SM","l");
+        //
+        if(cluster==1)leg2->AddEntry(genmbb[cluster],"QCD","l");
+        if(cluster==4)leg2->AddEntry(genmbb[cluster],"EW","l");
         // */
         /////
         // to hh only
         ////
-        ///*
+        /*
         //if(cluster==9) genmbb[cluster]->Scale(0.25);
         genmbb[cluster]->SetMaximum(0.25);//0.21);//0.61
         //genmbb[cluster][0]->SetMaximum(1.2*genmbb[cluster][0]->GetMaximum());
@@ -217,7 +226,7 @@ void draw() {
         genpth[cluster]->SetLineWidth(3);
         genpth[cluster]->Scale(normalize0);
         genpth[cluster]->SetLineStyle(line[cluster]);
-        genpth[cluster]->SetMaximum(0.53);
+        genpth[cluster]->SetMaximum(0.13);//0.53
         //
         normalize0 = 1./(genpthsub[cluster]->Integral());
         genpthsub[cluster]->SetTitle("");
@@ -341,7 +350,7 @@ void draw() {
         genmbb[0]->Draw();
         leg->Draw("same");
     leg2->Draw("same");
-        for(unsigned int cluster=1; cluster<10; cluster++) genmbb[cluster]->Draw("SAME");
+        for(unsigned int cluster=1; cluster<nsamples; cluster++) genmbb[cluster]->Draw("SAME");
         string namefilebenchmhh = "plotKin/clu_mhh.pdf";
         const char * filemhh = namefilebenchmhh.c_str();
         PT_HAT->SaveAs(filemhh);//JHEP2Dmhhclu[cluster]); 
@@ -350,7 +359,7 @@ void draw() {
         leg->Draw("same");
         
     leg2->Draw("same");
-        for(unsigned int cluster=1; cluster<10; cluster++) genpth[cluster]->Draw("SAME");
+        for(unsigned int cluster=1; cluster<nsamples; cluster++) genpth[cluster]->Draw("SAME");
     //Tl.DrawText(200, .1, "#hat{#kappa} = 1");
         namefilebenchmhh = "plotKin/clu_pth.pdf";
         const char * filepth = namefilebenchmhh.c_str();
@@ -359,7 +368,7 @@ void draw() {
     genpthsub[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=1; cluster<10; cluster++) genpthsub[cluster]->Draw("SAME");
+    for(unsigned int cluster=1; cluster<nsamples; cluster++) genpthsub[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_pthsub.pdf";
     const char * filepthsub = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filepthsub);//JHEP2Dmhhclu[cluster]); 
@@ -369,7 +378,7 @@ void draw() {
     gencost[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=1; cluster<10; cluster++) gencost[cluster]->Draw("SAME");
+    for(unsigned int cluster=1; cluster<nsamples; cluster++) gencost[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_cost.pdf";
     const char * filecost = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filecost);
@@ -378,7 +387,7 @@ void draw() {
     gencost2[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=1; cluster<11; cluster++) gencost2[cluster]->Draw("SAME");
+    for(unsigned int cluster=1; cluster<nsamples; cluster++) gencost2[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_cost2.pdf";
     const char * filecost2 = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filecost2);
@@ -386,7 +395,7 @@ void draw() {
     Njets_passing_kLooseID[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=1; cluster<10; cluster++) Njets_passing_kLooseID[cluster]->Draw("SAME");
+    for(unsigned int cluster=1; cluster<nsamples; cluster++) Njets_passing_kLooseID[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_njets.pdf";
     const char * filenjets = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filenjets);
@@ -394,7 +403,7 @@ void draw() {
     gendeta[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=0; cluster<10; cluster++) gendeta[cluster]->Draw("SAME");
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) gendeta[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_Deta.pdf";
     const char * filedr = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filedr);
@@ -402,7 +411,7 @@ void draw() {
     fullpth1[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=0; cluster<10; cluster++) fullpth1[cluster]->Draw("SAME");
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) fullpth1[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_j1pt.pdf";
     const char * filej1pt = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filej1pt);
@@ -410,7 +419,7 @@ void draw() {
     leptop[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=0; cluster<10; cluster++) leptop[cluster]->Draw("SAME");
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) leptop[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_j1eta.pdf";
     const char * filej1eta = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filej1eta);
@@ -418,7 +427,7 @@ void draw() {
     fullpth2[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=0; cluster<10; cluster++) fullpth2[cluster]->Draw("SAME");
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) fullpth2[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_j2pt.pdf";
     const char * filej2pt = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filej2pt);
@@ -426,7 +435,7 @@ void draw() {
     hadtop[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=0; cluster<10; cluster++) hadtop[cluster]->Draw("SAME");
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) hadtop[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_j2eta.pdf";
     const char * filej2eta = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filej2eta);
@@ -434,7 +443,7 @@ void draw() {
     toponept[0]->Draw();
     leg->Draw("same");
     leg2->Draw("same");
-    for(unsigned int cluster=0; cluster<10; cluster++) toponept[cluster]->Draw("SAME");
+    for(unsigned int cluster=0; cluster<nsamples; cluster++) toponept[cluster]->Draw("SAME");
     namefilebenchmhh = "plotKin/clu_toponePt.pdf";
     const char * filetopo = namefilebenchmhh.c_str();
     PT_HAT->SaveAs(filetopo);    
@@ -609,7 +618,7 @@ int isbtagged(vector<PseudoJet> jets, vector<int> & btag, vector<int> & bmistag,
 int save_hist(int isample){
     cout<<"saved histos "<<Nlep_passing_kLooseID.size()<<endl;
     
-    for(unsigned int cluster=0; cluster<19; cluster++){ 
+    for(unsigned int cluster=0; cluster<nsamples; cluster++){ 
         
         //genmbb[cluster][outlayer]=(TH1D*) genmbb1->Clone();
         //genmbb[cluster][outlayer]->SetDirectory(0);
@@ -837,8 +846,8 @@ int decla(int mass, int teste){
     
     TH1D *genmbb1 = new TH1D("higgs_mhh",  
                       label, 
-                      30,110.,1000.);
-                            // 30,380.,3000.);
+                      //30,110.,1000.);
+                             30,380.,6000.);
                             //  30,100.,3000.);
     genmbb1->GetYaxis()->SetTitle("");
     genmbb1->GetXaxis()->SetTitle("m_{hh}^{gen}");
@@ -859,9 +868,10 @@ int decla(int mass, int teste){
 
     TH1D *genpth1 = new TH1D("higgs_pt",  
                       label, 
-                      30,0.,2000.);
+                      //30,0.,2000.);
+         30,0.,1000.);
     genpth1->GetYaxis()->SetTitle("");
-    genpth1->GetXaxis()->SetTitle("leading p_{T}^{h, gen}");     
+    genpth1->GetXaxis()->SetTitle("leading p_{T}^{Q, gen}");  //("leading p_{T}^{h, gen}");     
         genpth[cluster]=(TH1D*) genpth1->Clone();
         genpth[cluster]->SetDirectory(0);
 

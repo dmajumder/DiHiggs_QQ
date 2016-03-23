@@ -48,6 +48,7 @@ int main() {
     hello();
     string fileparton , fileshower , dataparton = ".decayed" , datashower;
     if(showering) datashower = ".shower"; else datashower = ".decayed"; 
+    
     //////////////////////////////////////////////////
     // input
     // we are going to have only four samples, with 180 GeV mt selection, merge them and separate
@@ -73,6 +74,30 @@ int main() {
 
     };// width
     //*/
+    ///*
+    const int nsamples = 9;
+     string path[1]={"/Users/Xanda/Documents/programs/MG_NLO/"};
+     string sample[10] = { 
+      //   "../VLQ_h_light/TT_hh_benj/Graviton_Parton/MGraviton_500.lhe",
+     "VLQ_QQ_Up_qqHonly/hh_lhe_Do/K3.25203MQ800.lhe",
+     //"Th_hh_benj/Graviton_Parton/MGraviton_800.lhe",
+     "VLQ_QQ_Up_qqHonly/hh_lhe_Do/K4.06504MQ1000.lhe",
+     //"Th_hh_benj/Graviton_Parton/MGraviton_1500.lhe",
+     "VLQ_QQ_Up_qqHonly/hh_lhe_Do/K8.13008MQ2000.lhe",
+     //"Th_hh_benj/Graviton_Parton/MGraviton_2500.lhe",
+     "VLQ_QQ_Up_qqHonly/hh_lhe_Do/K8.13008MQ2000.lhe",
+     //
+     "VLQ_QQ_Up_QCDonly/hh_lhe_Do/K3.25203MQ800.lhe",
+     //"Bh_hh_benj/Graviton_Parton/MGraviton_800.lhe",
+     "VLQ_QQ_Up_QCDonly/hh_lhe_Do/K4.06504MQ1000.lhe",
+     //"Bh_hh_benj/Graviton_Parton/MGraviton_1500.lhe",
+     "VLQ_QQ_Up_QCDonly/hh_lhe_Do/K8.13008MQ2000.lhe",
+     //"Bh_hh_benj/Graviton_Parton/MGraviton_2500.lhe",
+     "VLQ_QQ_Up_QCDonly/hh_lhe_Do/K8.13008MQ2000.lhe",
+
+          "../VLQ_h_light/pp_hh_lhe/SM_loop_from_NLO.lhe"
+     };// width
+     //*/
     /*
     string path[1]={"/Users/Xanda/Documents/programs/VLQ_h_light/"};
     string sample[9] = { 
@@ -95,7 +120,7 @@ int main() {
         
     };// width
     //*/
-    ///*
+    /*
     string path[1]={"/Users/Xanda/Documents/programs/VLQ_h_light/pp_hh_lhe/"};
     string sample[10] = { 
         "Top/K2.03252MQ500.lhe",
@@ -170,13 +195,13 @@ int main() {
     double total[19];
     double selected[19];
     double selected4b[19];
-    for(unsigned int isample=0; isample<10; isample++) {
+    for(unsigned int isample=0; isample<nsamples; isample++) {
         total[isample]=0;
         selected[isample]=0;
         selected4b[isample]=0;
     }
     decla(0,0); // sum all samples | take the histo for one cluster
-    for(unsigned int isample=0; isample<10; isample++)  { // samples ...    
+    for(unsigned int isample=0; isample<nsamples; isample++)  { // samples ...    
         
         //////////////////////////////////////////////
         fileshower = path[0] + sample[isample] +  datashower; cout<<"\n\n reading file = "<<fileshower<<endl;
@@ -200,15 +225,17 @@ int main() {
                 in1shower >> pID >> Px >> Py >> Pz >> E ;//>> idup;
                 if(abs(pID) < 6 || pID==21){particles.push_back(fastjet::PseudoJet(Px,Py,Pz,E));particles.at(counter).set_user_index(pID); if(abs(pID) == 5) nb++; counter++;} 
                 else if (abs(pID)==6) {tops.push_back(fastjet::PseudoJet(Px,Py,Pz,E)); countert++;} 
-                else if (abs(pID)==25) {higgses.push_back(fastjet::PseudoJet(Px,Py,Pz,E));} 
-                else if (abs(pID)>6000000) {Topone.push_back(fastjet::PseudoJet(Px,Py,Pz,E));} 
+                else if (abs(pID)>600000) {higgses.push_back(fastjet::PseudoJet(Px,Py,Pz,E));} //abs(pID)==25 || 
+                
                 else if (abs(pID)==11 || abs(pID)==13) {leptons.push_back(fastjet::PseudoJet(Px,Py,Pz,E)); leptons.at(counterl).set_user_index(pID); counterl++;} 
                 else if (abs(pID)==12 || abs(pID)==14) {neutrinos.push_back(fastjet::PseudoJet(Px,Py,Pz,E)); neutrinos.at(countern).set_user_index(pID); countern++;} // close if 
+                if (abs(pID)>6000000) {Topone.push_back(fastjet::PseudoJet(Px,Py,Pz,E));} 
+                if (abs(pID)==25) {higgses.push_back(fastjet::PseudoJet(Px,Py,Pz,E));}
             } // close for each particle
             //////////////////////////////////////////////////////////////////
            // for(unsigned int outlayer=0; outlayer<6; outlayer++) for(unsigned int clusterr=0; clusterr<12; clusterr++) {
                 //cout<<"event "<< ievent<<" here cluster "<<clusterr<<" here out "<< outlayer<<endl;
-            //cout<<higgses.size()<<endl;
+            
                 double weight =  GenLevelWeight(higgses,particles,Topone,isample,0);
                 //for(unsigned int outlayer=0; outlayer<6; outlayer++) for(unsigned int clusterr=2; clusterr<3; clusterr++) {
                 //    cout<<"here cluster "<<clusterr<<" here out "<< outlayer<<endl;
@@ -232,7 +259,7 @@ int main() {
            // }//close for outlayers
             //load();
             //} // close for cluster
-            
+            //cout<<"passed"<<endl;
         } in1shower.close();// in1.close(); // close for each event
         /////////////////////////////////////////////////////////////////////
 
